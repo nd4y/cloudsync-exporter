@@ -1,0 +1,38 @@
+# Reference deployment on the Synology itself (Container Manager / docker compose).
+# The repository is read-only; the daemon log is optional and readable only by root,
+# so the container stays root but drops every capability except the one that lets
+# root read files it does not own.
+services:
+  cloudsync-exporter:
+    image: ghcr.io/nd4y/cloudsync-exporter:latest
+    container_name: cloudsync-exporter
+    restart: unless-stopped
+    environment:
+      CLOUDSYNC_REPO: /cloudsync
+      CLOUDSYNC_LOG_DIR: /cloudsync-log
+      LISTEN_PORT: "9840"
+      # Optional: the same status the Cloud Sync UI shows + "Processing N files"
+      # DSM_URL: https://192.168.0.10:5001
+      # DSM_USER: cloudsync-exporter
+      # DSM_PASS: ...
+      # DSM_VERIFY_TLS: "false"
+    volumes:
+      # repository: `repo_path` in /volumeN/@cloudsync/config/daemon.conf
+      - /volume2/@cloudsync:/cloudsync:ro
+      # daemon log (root only on the host)
+      - /volume1/@appdata/CloudSync/log:/cloudsync-log:ro
+    ports:
+      - "9840:9840"
+    read_only: true
+    cap_drop:
+      - ALL
+    cap_add:
+      - DAC_READ_SEARCH
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 256m
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
