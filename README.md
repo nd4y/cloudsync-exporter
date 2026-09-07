@@ -41,7 +41,10 @@ Pure Python standard library, a single file, runs on `python:3.12-alpine`.
 Databases are opened with SQLite `mode=ro`. They run in WAL mode; a read-only
 bind mount is fine (SQLite falls back to a heap wal-index). If a read still
 fails with an I/O error the exporter re-reads the main file with `immutable=1`
-and reports it in `cloudsync_db_immutable_fallback_reads_total`. Database
+and reports it in `cloudsync_db_immutable_fallback_reads_total`. Temporary
+b-trees are kept in memory (`PRAGMA temp_store=MEMORY`): with a read-only root
+filesystem and no tmpfs a `GROUP BY` over a large index would otherwise fail
+with the very same "disk I/O error". Database
 metrics are cached for `REFRESH_INTERVAL` seconds regardless of how often
 Prometheus scrapes; the log is tailed continuously and survives rotation.
 
@@ -123,7 +126,7 @@ long as fewer than 500 events per connection arrive between two refreshes
 | `cloudsync_uploads_started_total{sess_id}`, `cloudsync_upload_failures_total{sess_id,code,error}` | |
 | `cloudsync_events_total{stage,type,sess_id}` | `stage` pushed (detected locally) → processing → done; `type` EV_ADD, EV_MODIFY, ... |
 | `cloudsync_resume_session_responses_total{code}` | HTTP codes when resuming interrupted uploads |
-| `cloudsync_log_available`, `_lines_total{level}`, `_last_timestamp_seconds`, `_file_bytes`, `_rotations_total`, `_parse_errors_total` | tailer health; `last_timestamp` doubles as daemon liveness |
+| `cloudsync_log_available`, `_lines_total{level}`, `_last_timestamp_seconds`, `_file_bytes`, `_rotations_total`, `_continuation_lines_total` | tailer health; `last_timestamp` doubles as daemon liveness |
 
 Per-worker lines carry no connection id, so the exporter maps workers to
 connections/tasks from the throttling and `current event` lines (the last

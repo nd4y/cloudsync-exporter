@@ -41,7 +41,9 @@ sqlite-базах в своём репозитории и пишет подро�
 Базы открываются через SQLite `mode=ro`. Они в режиме WAL; read-only bind mount
 подходит (SQLite переходит на wal-index в памяти). Если чтение всё же падает с
 I/O error, экспортер перечитывает основной файл с `immutable=1` и отмечает это в
-`cloudsync_db_immutable_fallback_reads_total`. Метрики из баз кэшируются на
+`cloudsync_db_immutable_fallback_reads_total`. Временные b-tree держатся в памяти
+(`PRAGMA temp_store=MEMORY`): при read-only корне без tmpfs `GROUP BY` по большому
+индексу иначе падает с тем же самым «disk I/O error». Метрики из баз кэшируются на
 `REFRESH_INTERVAL` секунд независимо от частоты скрейпа; лог читается непрерывно
 и переживает ротацию.
 
@@ -123,7 +125,7 @@ root'ом, но из capability оставлена одна `DAC_READ_SEARCH` (�
 | `cloudsync_uploads_started_total{sess_id}`, `cloudsync_upload_failures_total{sess_id,code,error}` | |
 | `cloudsync_events_total{stage,type,sess_id}` | `stage` pushed (обнаружено локально) → processing → done; `type` EV_ADD, EV_MODIFY, … |
 | `cloudsync_resume_session_responses_total{code}` | HTTP-коды при возобновлении прерванных загрузок |
-| `cloudsync_log_available`, `_lines_total{level}`, `_last_timestamp_seconds`, `_file_bytes`, `_rotations_total`, `_parse_errors_total` | здоровье tailer'а; `last_timestamp` заодно показывает, жив ли демон |
+| `cloudsync_log_available`, `_lines_total{level}`, `_last_timestamp_seconds`, `_file_bytes`, `_rotations_total`, `_continuation_lines_total` | здоровье tailer'а; `last_timestamp` заодно показывает, жив ли демон |
 
 В строках воркеров нет id соединения, поэтому экспортер сопоставляет воркеры с
 соединениями/задачами по строкам throttling и `current event` (при старте для

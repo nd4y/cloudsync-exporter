@@ -158,6 +158,9 @@ def open_ro(path, immutable=False):
         uri += "&immutable=1"
     conn = sqlite3.connect(uri, uri=True, timeout=5, check_same_thread=False)
     conn.row_factory = sqlite3.Row
+    # GROUP BY over a few hundred thousand rows spills a temp b-tree to disk;
+    # inside a read-only container that spill fails with "disk I/O error".
+    conn.execute("PRAGMA temp_store=MEMORY")
     return conn
 
 
@@ -582,7 +585,7 @@ class LogState:
         self.lines = {}            # level -> n
         self.last_ts = 0.0
         self.rotations = 0
-        self.parse_errors = 0
+        self.continuation_lines = 0  # lines without the daemon prefix (HTTP dumps)
         self.throttle = {}         # conn -> (monotonic_seen, remaining_seconds)
         self.worker_conn = {}      # worker -> conn (from throttling lines)
         self.worker_sess = {}      # worker -> sess (from "current event" lines)
@@ -630,7 +633,8 @@ def parse_log_line(line, st, now=None):
     now = time.monotonic() if now is None else now
     m = RE_HEAD.match(line)
     if not m:
-        st.parse_errors += 1
+        # multi-line HTTP error bodies/headers the daemon dumps verbatim
+        st.continuation_lines += 1
         return
     ts_text, level, msg = m.groups()
     bump(st.lines, level)
@@ -808,9 +812,9 @@ def log_metrics(st, now=None):
               st.file_size)
         s.add("cloudsync_log_rotations_total", "counter", "Log rotations noticed", {},
               st.rotations)
-        s.add("cloudsync_log_parse_errors_total", "counter",
-              "Lines that did not match the expected syno-cloud-syncd format", {},
-              st.parse_errors)
+        s.add("cloudsync_log_continuation_lines_total", "counter",
+              "Log lines without the syno-cloud-syncd prefix (multi-line HTTP error dumps)", {},
+              st.continuation_lines)
         for conn, (seen, remaining) in sorted(st.throttle.items()):
             fresh = now - seen <= THROTTLE_WINDOW
             s.add("cloudsync_connection_throttled", "gauge",

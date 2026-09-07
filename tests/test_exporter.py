@@ -301,7 +301,7 @@ def test_log_parser_counters():
     assert m['cloudsync_log_lines_total{level="INFO"}'] == 9
     assert m['cloudsync_log_lines_total{level="ERROR"}'] == 5
     assert m['cloudsync_log_lines_total{level="NOTE"}'] == 2
-    assert m["cloudsync_log_parse_errors_total"] == 1
+    assert m["cloudsync_log_continuation_lines_total"] == 1
     assert m['cloudsync_connection_throttled{conn_id="7"}'] == 1
     assert m['cloudsync_connection_throttle_remaining_seconds{conn_id="7"}'] == 289
     # worker 32 was seen throttling for connection 7, worker 99 never was
