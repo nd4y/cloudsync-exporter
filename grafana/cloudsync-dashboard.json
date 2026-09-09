@@ -729,6 +729,128 @@
     {
       "id": 10,
       "type": "timeseries",
+      "title": "Файлов в обработке",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "afjapivs17a4gc"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "afjapivs17a4gc"
+          },
+          "expr": "cloudsync_dsm_connection_unfinished_files",
+          "legendFormat": "в обработке (UI): {{task_name}}",
+          "instant": false,
+          "range": true,
+          "editorMode": "code"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "afjapivs17a4gc"
+          },
+          "expr": "cloudsync_session_files_without_remote_id * on (conn_id) group_left (task_name) cloudsync_connection_info{client_type!=\"11\"}",
+          "legendFormat": "не залито (без remote id): {{task_name}} / {{share}}",
+          "instant": false,
+          "range": true,
+          "editorMode": "code"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "afjapivs17a4gc"
+          },
+          "expr": "sum by (conn_id, share) (cloudsync_unfinished_events)",
+          "legendFormat": "передаётся сейчас: conn {{conn_id}} / {{share}}",
+          "instant": false,
+          "range": true,
+          "editorMode": "code"
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "afjapivs17a4gc"
+          },
+          "expr": "sum by (conn_id, share) (cloudsync_resumable_transfers)",
+          "legendFormat": "ждёт возобновления: conn {{conn_id}} / {{share}}",
+          "instant": false,
+          "range": true,
+          "editorMode": "code"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 15,
+        "w": 24,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "showPoints": "never",
+            "spanNulls": true,
+            "lineInterpolation": "smooth",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "axisSoftMin": 0
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "в обработке.*"
+            },
+            "properties": [
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 25
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "description": "«В обработке (UI)» — то же число, что Cloud Sync показывает как «Processing N file(s)…»; берётся из DSM Web API и появляется только когда у экспортера задан DSM_URL. Остальные ряды — оценки по базам демона: файлы без облачного id (для Google Drive = ещё не залито), незавершённые и возобновляемые передачи."
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
       "title": "Файлы без remote id (ещё не в облаке)",
       "datasource": {
         "type": "prometheus",
@@ -750,7 +872,7 @@
       ],
       "gridPos": {
         "x": 0,
-        "y": 15,
+        "y": 23,
         "w": 12,
         "h": 8
       },
@@ -793,7 +915,7 @@
       "description": "Только облака с идентификаторами файлов (Google Drive и т.п.); WebDAV отфильтрован."
     },
     {
-      "id": 11,
+      "id": 12,
       "type": "timeseries",
       "title": "Байт без remote id",
       "datasource": {
@@ -816,7 +938,7 @@
       ],
       "gridPos": {
         "x": 12,
-        "y": 15,
+        "y": 23,
         "w": 12,
         "h": 8
       },
@@ -858,7 +980,7 @@
       }
     },
     {
-      "id": 12,
+      "id": 13,
       "type": "timeseries",
       "title": "Удалённые события в обработке",
       "datasource": {
@@ -881,7 +1003,7 @@
       ],
       "gridPos": {
         "x": 0,
-        "y": 23,
+        "y": 31,
         "w": 8,
         "h": 8
       },
@@ -924,7 +1046,7 @@
       "description": "medium_db_pending_events: изменения, полученные из облака, но ещё не сведённые с локальным индексом. mode 2 = файлы, 3 = каталоги."
     },
     {
-      "id": 13,
+      "id": 14,
       "type": "timeseries",
       "title": "Незавершённые и возобновляемые передачи",
       "datasource": {
@@ -959,72 +1081,7 @@
       ],
       "gridPos": {
         "x": 8,
-        "y": 23,
-        "w": 8,
-        "h": 8
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "line",
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "gradientMode": "opacity",
-            "showPoints": "never",
-            "spanNulls": true,
-            "lineInterpolation": "smooth",
-            "stacking": {
-              "mode": "none",
-              "group": "A"
-            },
-            "axisPlacement": "auto",
-            "axisSoftMin": 0
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true,
-          "calcs": []
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      }
-    },
-    {
-      "id": 14,
-      "type": "timeseries",
-      "title": "Отложенные сканы каталогов",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "afjapivs17a4gc"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "afjapivs17a4gc"
-          },
-          "expr": "cloudsync_session_pending_scans",
-          "legendFormat": "{{share}}",
-          "instant": false,
-          "range": true,
-          "editorMode": "code"
-        }
-      ],
-      "gridPos": {
-        "x": 16,
-        "y": 23,
+        "y": 31,
         "w": 8,
         "h": 8
       },
@@ -1067,19 +1124,84 @@
     },
     {
       "id": 15,
+      "type": "timeseries",
+      "title": "Отложенные сканы каталогов",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "afjapivs17a4gc"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "afjapivs17a4gc"
+          },
+          "expr": "cloudsync_session_pending_scans",
+          "legendFormat": "{{share}}",
+          "instant": false,
+          "range": true,
+          "editorMode": "code"
+        }
+      ],
+      "gridPos": {
+        "x": 16,
+        "y": 31,
+        "w": 8,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
+            "showPoints": "never",
+            "spanNulls": true,
+            "lineInterpolation": "smooth",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "axisSoftMin": 0
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 16,
       "type": "row",
       "title": "Активность",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 31,
+        "y": 39,
         "w": 24,
         "h": 1
       },
       "panels": []
     },
     {
-      "id": 16,
+      "id": 17,
       "type": "timeseries",
       "title": "Переносы за час (история)",
       "datasource": {
@@ -1102,7 +1224,7 @@
       ],
       "gridPos": {
         "x": 0,
-        "y": 32,
+        "y": 40,
         "w": 12,
         "h": 8
       },
@@ -1145,7 +1267,7 @@
       "description": "Из history.sqlite: upload, download, remove_remote… Счётчик стартует с нуля при запуске экспортера."
     },
     {
-      "id": 17,
+      "id": 18,
       "type": "timeseries",
       "title": "Попытки загрузки и отказы (лог)",
       "datasource": {
@@ -1180,7 +1302,7 @@
       ],
       "gridPos": {
         "x": 12,
-        "y": 32,
+        "y": 40,
         "w": 12,
         "h": 8
       },
@@ -1222,7 +1344,7 @@
       }
     },
     {
-      "id": 18,
+      "id": 19,
       "type": "timeseries",
       "title": "Ошибки API облака за час",
       "datasource": {
@@ -1245,72 +1367,7 @@
       ],
       "gridPos": {
         "x": 0,
-        "y": 40,
-        "w": 8,
-        "h": 8
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "drawStyle": "bars",
-            "lineWidth": 1,
-            "fillOpacity": 60,
-            "gradientMode": "opacity",
-            "showPoints": "never",
-            "spanNulls": true,
-            "lineInterpolation": "smooth",
-            "stacking": {
-              "mode": "normal",
-              "group": "A"
-            },
-            "axisPlacement": "auto",
-            "axisSoftMin": 0
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true,
-          "calcs": []
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      }
-    },
-    {
-      "id": 19,
-      "type": "timeseries",
-      "title": "Исходы воркеров за час",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "afjapivs17a4gc"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "afjapivs17a4gc"
-          },
-          "expr": "increase(cloudsync_worker_results_total[1h])",
-          "legendFormat": "{{result}}",
-          "instant": false,
-          "range": true,
-          "editorMode": "code"
-        }
-      ],
-      "gridPos": {
-        "x": 8,
-        "y": 40,
+        "y": 48,
         "w": 8,
         "h": 8
       },
@@ -1354,6 +1411,71 @@
     {
       "id": 20,
       "type": "timeseries",
+      "title": "Исходы воркеров за час",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "afjapivs17a4gc"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "afjapivs17a4gc"
+          },
+          "expr": "increase(cloudsync_worker_results_total[1h])",
+          "legendFormat": "{{result}}",
+          "instant": false,
+          "range": true,
+          "editorMode": "code"
+        }
+      ],
+      "gridPos": {
+        "x": 8,
+        "y": 48,
+        "w": 8,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 60,
+            "gradientMode": "opacity",
+            "showPoints": "never",
+            "spanNulls": true,
+            "lineInterpolation": "smooth",
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "axisSoftMin": 0
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 21,
+      "type": "timeseries",
       "title": "События по стадиям за час",
       "datasource": {
         "type": "prometheus",
@@ -1375,7 +1497,7 @@
       ],
       "gridPos": {
         "x": 16,
-        "y": 40,
+        "y": 48,
         "w": 8,
         "h": 8
       },
@@ -1418,20 +1540,20 @@
       "description": "pushed — обнаружено локально, processing — взято воркером, done — завершено."
     },
     {
-      "id": 21,
+      "id": 22,
       "type": "row",
       "title": "Троттлинг Google",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 48,
+        "y": 56,
         "w": 24,
         "h": 1
       },
       "panels": []
     },
     {
-      "id": 22,
+      "id": 23,
       "type": "state-timeline",
       "title": "Троттлинг по соединениям",
       "datasource": {
@@ -1454,7 +1576,7 @@
       ],
       "gridPos": {
         "x": 0,
-        "y": 49,
+        "y": 57,
         "w": 12,
         "h": 6
       },
@@ -1511,7 +1633,7 @@
       }
     },
     {
-      "id": 23,
+      "id": 24,
       "type": "timeseries",
       "title": "Остаток back-off, с",
       "datasource": {
@@ -1534,7 +1656,7 @@
       ],
       "gridPos": {
         "x": 12,
-        "y": 49,
+        "y": 57,
         "w": 12,
         "h": 6
       },
@@ -1576,7 +1698,7 @@
       }
     },
     {
-      "id": 24,
+      "id": 25,
       "type": "timeseries",
       "title": "Отправок в back-off за час",
       "datasource": {
@@ -1599,7 +1721,7 @@
       ],
       "gridPos": {
         "x": 0,
-        "y": 55,
+        "y": 63,
         "w": 12,
         "h": 6
       },
@@ -1641,7 +1763,7 @@
       }
     },
     {
-      "id": 25,
+      "id": 26,
       "type": "timeseries",
       "title": "Секунд back-off за час",
       "datasource": {
@@ -1664,7 +1786,7 @@
       ],
       "gridPos": {
         "x": 12,
-        "y": 55,
+        "y": 63,
         "w": 12,
         "h": 6
       },
@@ -1707,20 +1829,20 @@
       "description": "Суммарно по 20 воркерам, поэтому может превышать 3600."
     },
     {
-      "id": 26,
+      "id": 27,
       "type": "row",
       "title": "Объёмы",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 61,
+        "y": 69,
         "w": 24,
         "h": 1
       },
       "panels": []
     },
     {
-      "id": 27,
+      "id": 28,
       "type": "timeseries",
       "title": "Локально и в облаке по задачам",
       "datasource": {
@@ -1755,7 +1877,7 @@
       ],
       "gridPos": {
         "x": 0,
-        "y": 62,
+        "y": 70,
         "w": 12,
         "h": 8
       },
@@ -1798,7 +1920,7 @@
       "description": "При шифровании на клиенте «в облаке» больше «локально» на служебные данные."
     },
     {
-      "id": 28,
+      "id": 29,
       "type": "timeseries",
       "title": "Файлов в индексе",
       "datasource": {
@@ -1833,7 +1955,7 @@
       ],
       "gridPos": {
         "x": 12,
-        "y": 62,
+        "y": 70,
         "w": 12,
         "h": 8
       },
@@ -1875,19 +1997,19 @@
       }
     },
     {
-      "id": 29,
+      "id": 30,
       "type": "row",
       "title": "Служебное",
       "collapsed": true,
       "gridPos": {
         "x": 0,
-        "y": 70,
+        "y": 78,
         "w": 24,
         "h": 1
       },
       "panels": [
         {
-          "id": 30,
+          "id": 31,
           "type": "timeseries",
           "title": "Чтение баз",
           "datasource": {
@@ -1934,7 +2056,7 @@
           ],
           "gridPos": {
             "x": 0,
-            "y": 71,
+            "y": 79,
             "w": 8,
             "h": 7
           },
@@ -1976,7 +2098,7 @@
           }
         },
         {
-          "id": 31,
+          "id": 32,
           "type": "timeseries",
           "title": "Размер баз",
           "datasource": {
@@ -2023,7 +2145,7 @@
           ],
           "gridPos": {
             "x": 8,
-            "y": 71,
+            "y": 79,
             "w": 8,
             "h": 7
           },
@@ -2065,7 +2187,7 @@
           }
         },
         {
-          "id": 32,
+          "id": 33,
           "type": "timeseries",
           "title": "Строки лога в минуту",
           "datasource": {
@@ -2100,7 +2222,7 @@
           ],
           "gridPos": {
             "x": 16,
-            "y": 71,
+            "y": 79,
             "w": 8,
             "h": 7
           },
