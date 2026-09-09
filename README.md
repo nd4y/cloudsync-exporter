@@ -143,14 +143,18 @@ users, but they only see their own connections). The exporter logs in with
 |---|---|
 | `cloudsync_dsm_connection_state{state}` | state set: `uptodate`, `syncing`, `processing`, `scanning`, `connecting`, `pause`, `suspended`, `error`, `unlink` — exactly one is 1 |
 | `cloudsync_dsm_connection_unfinished_files` | the UI's *"Processing N file(s)..."* |
-| `cloudsync_dsm_connection_info{link_status,last_sync_status,error_type}` | |
-| `cloudsync_dsm_connection_error_code`, `_session_errors`, `_next_sync_timestamp_seconds` | |
-| `cloudsync_dsm_session_state{state}`, `cloudsync_dsm_session_error_code` | per task |
+| `cloudsync_dsm_connection_info{type,display_name,user}` | `type` = `gd`, `wd`, ... |
+| `cloudsync_dsm_connection_link_status`, `_cloud_status`, `_exceeds_maximum_files` | raw `list_conn` fields |
+| `cloudsync_dsm_session_state{local_path,state}` | per task, same state set (`sync_status`) |
+| `cloudsync_dsm_session_info{remote_path,direction,cloud_type}` | `direction` = `ONLY_UPLOAD`, ... |
+| `cloudsync_dsm_session_error_code`, `_link_status` | |
+| `cloudsync_dsm_paused`, `cloudsync_dsm_tray_info{state}` | global pause flag and tray status |
 | `cloudsync_dsm_up`, `_requests_total`, `_poll_failures_total`, `_last_success_timestamp_seconds` | |
 
-This source has been implemented against the DSM UI's own calls but not yet
-verified against a live DSM with credentials — run with `DEBUG=1` to log the
-raw responses if something looks off.
+Verified on DSM 7.2.2 / Cloud Sync 2.7.2 with a dedicated member of
+`administrators` (a non-admin sees only its own connections). The exporter
+keeps one DSM session and re-logs-in when it expires. Run with `DEBUG=1` to
+log the raw responses.
 
 ### Exporter
 

@@ -142,14 +142,18 @@ root'ом, но из capability оставлена одна `DAC_READ_SEARCH` (�
 |---|---|
 | `cloudsync_dsm_connection_state{state}` | набор состояний: `uptodate`, `syncing`, `processing`, `scanning`, `connecting`, `pause`, `suspended`, `error`, `unlink` — ровно одно равно 1 |
 | `cloudsync_dsm_connection_unfinished_files` | то самое *«Processing N file(s)…»* из UI |
-| `cloudsync_dsm_connection_info{link_status,last_sync_status,error_type}` | |
-| `cloudsync_dsm_connection_error_code`, `_session_errors`, `_next_sync_timestamp_seconds` | |
-| `cloudsync_dsm_session_state{state}`, `cloudsync_dsm_session_error_code` | по задачам |
+| `cloudsync_dsm_connection_info{type,display_name,user}` | `type` = `gd`, `wd`, … |
+| `cloudsync_dsm_connection_link_status`, `_cloud_status`, `_exceeds_maximum_files` | сырые поля `list_conn` |
+| `cloudsync_dsm_session_state{local_path,state}` | по задачам, тот же набор состояний (`sync_status`) |
+| `cloudsync_dsm_session_info{remote_path,direction,cloud_type}` | `direction` = `ONLY_UPLOAD`, … |
+| `cloudsync_dsm_session_error_code`, `_link_status` | |
+| `cloudsync_dsm_paused`, `cloudsync_dsm_tray_info{state}` | глобальная пауза и статус в трее |
 | `cloudsync_dsm_up`, `_requests_total`, `_poll_failures_total`, `_last_success_timestamp_seconds` | |
 
-Этот источник написан по вызовам самого UI DSM, но на живом DSM с учётными
-данными пока не проверялся — при странностях запускайте с `DEBUG=1`, сырые
-ответы уйдут в лог.
+Проверено на DSM 7.2.2 / Cloud Sync 2.7.2 с отдельной учёткой из группы
+`administrators` (не-админ видит только свои соединения). Экспортер держит одну
+сессию DSM и перелогинивается, когда она протухает. С `DEBUG=1` сырые ответы
+уходят в лог.
 
 ### Сам экспортер
 

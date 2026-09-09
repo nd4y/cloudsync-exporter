@@ -899,6 +899,7 @@ class DsmClient(threading.Thread):
         self.last_error = ""
         self.conns = []
         self.sess = {}   # conn_id -> list
+        self.top = {}    # top-level fields of the last list_conn answer
         self.last_ok = 0.0
         self.requests = 0
         self.failures = 0
@@ -955,6 +956,7 @@ class DsmClient(threading.Thread):
         debug(f"dsm list_sess: {json.dumps(sess)[:2000]}")
         with self.lock:
             self.conns, self.sess, self.up, self.last_error = conns, sess, 1, ""
+            self.top = data if isinstance(data, dict) else {}
             self.last_ok = time.time()
 
     def run(self):
@@ -983,6 +985,14 @@ def dsm_metrics(client):
               client.failures)
         s.add("cloudsync_dsm_last_success_timestamp_seconds", "gauge",
               "When the DSM Web API was last polled successfully", {}, client.last_ok)
+        if client.up:
+            s.add("cloudsync_dsm_paused", "gauge",
+                  "1 if syncing is paused globally (list_conn is_pause)", {},
+                  1 if client.top.get("is_pause") else 0)
+            tray = str(client.top.get("tray_status", "unknown"))
+            s.add("cloudsync_dsm_tray_info", "gauge",
+                  "Overall Cloud Sync status as shown in the DSM tray; value is always 1",
+                  {"state": tray}, 1)
         for c in client.conns:
             cid = c.get("id")
             lbl = {"conn_id": cid, "task_name": c.get("task_name", "")}
@@ -997,29 +1007,38 @@ def dsm_metrics(client):
                   "Files still to be processed for this connection ('Processing N "
                   "file(s)...' in the UI)", lbl, num(c.get("unfinished_files")))
             s.add("cloudsync_dsm_connection_info", "gauge",
-                  "Connection status details from the DSM Web API; value is always 1",
-                  {**lbl, "link_status": str(c.get("link_status", "")),
-                   "last_sync_status": str(c.get("last_sync_status", "")),
-                   "error_type": str(c.get("error_type", ""))}, 1)
-            s.add("cloudsync_dsm_connection_error_code", "gauge",
-                  "Connection error code reported by the DSM Web API (0 = none)", lbl,
-                  num(c.get("error")))
-            s.add("cloudsync_dsm_connection_session_errors", "gauge",
-                  "Sessions of this connection currently in error (sess_err_cnt)", lbl,
-                  num(c.get("sess_err_cnt")))
-            s.add("cloudsync_dsm_connection_next_sync_timestamp_seconds", "gauge",
-                  "Next scheduled sync (0 when not scheduled)", lbl,
-                  num(c.get("next_sync_timestamp")))
+                  "Connection details from the DSM Web API; value is always 1",
+                  {**lbl, "type": str(c.get("type", "")),
+                   "display_name": str(c.get("task_display_name", "")),
+                   "user": str(c.get("user_name", ""))}, 1)
+            s.add("cloudsync_dsm_connection_link_status", "gauge",
+                  "list_conn link_status raw value (1 observed while linked)", lbl,
+                  num(c.get("link_status")))
+            s.add("cloudsync_dsm_connection_cloud_status", "gauge",
+                  "list_conn cloud_status raw value (0 observed when healthy)", lbl,
+                  num(c.get("cloud_status")))
+            s.add("cloudsync_dsm_connection_exceeds_maximum_files", "gauge",
+                  "1 if DSM flags the connection as exceeding the supported file count", lbl,
+                  1 if c.get("exceed_maximum_files") else 0)
             for t in client.sess.get(cid, []):
                 slbl = {"conn_id": cid, "sess_id": t.get("sess_id", t.get("id", "")),
-                        "share": t.get("share_name", "")}
-                st_ = str(t.get("status", t.get("link_status", "unknown")))
-                s.add("cloudsync_dsm_session_state", "gauge",
-                      "Task status as reported by the DSM Web API (list_sess)",
-                      {**slbl, "state": st_}, 1)
+                        "local_path": str(t.get("local_sync_path", ""))}
+                st_ = str(t.get("sync_status", t.get("status", "unknown")))
+                for state in DSM_STATES + ((st_,) if st_ not in DSM_STATES else ()):
+                    s.add("cloudsync_dsm_session_state", "gauge",
+                          "Task status as reported by the DSM Web API (list_sess "
+                          "sync_status); exactly one state per task is 1",
+                          {**slbl, "state": state}, 1 if state == st_ else 0)
+                s.add("cloudsync_dsm_session_info", "gauge",
+                      "Task details from the DSM Web API; value is always 1",
+                      {**slbl, "remote_path": str(t.get("remote_sync_path", "")),
+                       "direction": str(t.get("sync_direction", "")),
+                       "cloud_type": str(t.get("cloud_type_str", ""))}, 1)
                 s.add("cloudsync_dsm_session_error_code", "gauge",
                       "Task error code reported by the DSM Web API (0 = none)", slbl,
                       num(t.get("error")))
+                s.add("cloudsync_dsm_session_link_status", "gauge",
+                      "list_sess link_status raw value", slbl, num(t.get("link_status")))
     return s
 
 

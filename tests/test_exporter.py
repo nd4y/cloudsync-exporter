@@ -404,22 +404,38 @@ class FakeDsm:
     requests = 3
     failures = 0
     last_ok = 123.0
-    conns = [{"id": 7, "task_name": "Google Drive", "status": "syncing", "link_status": "online",
-              "unfinished_files": 1234, "last_sync_status": "unknown", "error": 0,
-              "error_type": "", "sess_err_cnt": 0, "next_sync_timestamp": 0}]
-    sess = {7: [{"sess_id": 12, "share_name": "homes", "status": "syncing", "error": 0}]}
+    # shapes as returned by DSM 7.2.2 / Cloud Sync 2.7.2
+    top = {"is_admin_mode": True, "is_pause": False, "notification": None, "total": 1,
+           "tray_status": "syncing"}
+    conns = [{"cloud_status": 0, "exceed_maximum_files": False, "id": 7, "link_status": 1,
+              "resource": "", "status": "syncing", "task_display_name": "Google Drive",
+              "task_name": "Google Drive", "type": "gd", "type_id": 1, "unfinished_files": 10005,
+              "user_id": "1066857", "user_name": "AV"}]
+    sess = {7: [{"cloud_type_str": "gd", "conn_id": 7, "error": 0, "error_desc": "",
+                 "link_status": 1, "local_sync_path": "/homes/AV", "priority": 1,
+                 "remote_file_count": 0, "remote_folder_id": "1U_Pi",
+                 "remote_sync_path": "/CloudSync/st1/homes/AV", "sess_id": 12,
+                 "sync_direction": "ONLY_UPLOAD", "sync_status": "syncing"}]}
 
 
 def test_dsm_metrics_state_set():
     m = parse(exporter.dsm_metrics(FakeDsm()).render())
     assert m["cloudsync_dsm_up"] == 1
+    assert m["cloudsync_dsm_paused"] == 0
+    assert m['cloudsync_dsm_tray_info{state="syncing"}'] == 1
     c = 'conn_id="7",task_name="Google Drive"'
     assert m[f'cloudsync_dsm_connection_state{{{c},state="syncing"}}'] == 1
     assert m[f'cloudsync_dsm_connection_state{{{c},state="uptodate"}}'] == 0
-    assert m[f'cloudsync_dsm_connection_unfinished_files{{{c}}}'] == 1234
-    assert m[f'cloudsync_dsm_connection_info{{{c},link_status="online",last_sync_status="unknown",'
-             f'error_type=""}}'] == 1
-    assert m['cloudsync_dsm_session_state{conn_id="7",sess_id="12",share="homes",state="syncing"}'] == 1
+    assert m[f'cloudsync_dsm_connection_unfinished_files{{{c}}}'] == 10005
+    assert m[f'cloudsync_dsm_connection_info{{{c},type="gd",display_name="Google Drive",user="AV"}}'] == 1
+    assert m[f'cloudsync_dsm_connection_link_status{{{c}}}'] == 1
+    assert m[f'cloudsync_dsm_connection_exceeds_maximum_files{{{c}}}'] == 0
+    s = 'conn_id="7",sess_id="12",local_path="/homes/AV"'
+    assert m[f'cloudsync_dsm_session_state{{{s},state="syncing"}}'] == 1
+    assert m[f'cloudsync_dsm_session_state{{{s},state="pause"}}'] == 0
+    assert m[f'cloudsync_dsm_session_info{{{s},remote_path="/CloudSync/st1/homes/AV",'
+             f'direction="ONLY_UPLOAD",cloud_type="gd"}}'] == 1
+    assert m[f'cloudsync_dsm_session_error_code{{{s}}}'] == 0
 
 
 def test_extract_list_shapes():
