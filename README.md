@@ -20,7 +20,7 @@ exporter reads both **read-only** and exposes:
   reason (`userRateLimitExceeded`, `rateLimitExceeded`, `authError`, ...),
   per-worker outcomes, event pipeline stages (detected → processing → done);
 - optionally, the exact status the UI shows (`uptodate`/`syncing`/`pause`/...)
-  and the *"Processing N files"* counter, via the DSM Web API.
+  and the _"Processing N files"_ counter, via the DSM Web API.
 
 Pure Python standard library, a single file, runs on `python:3.12-alpine`.
 
@@ -60,17 +60,17 @@ Labels: `conn_id`/`task_name` identify a connection (cloud account), `sess_id`/
 
 ### Configuration (`db/config.sqlite`)
 
-| Metric | Description |
-|---|---|
-| `cloudsync_connection_info{client_type,local_user,remote_user,remote_root}` | 1 per connection |
-| `cloudsync_connection_status`, `_error`, `_last_sync_status` | raw integers from `connection_table` |
-| `cloudsync_connection_pull_event_period_seconds` | how often remote changes are polled |
-| `cloudsync_connection_max_{upload,download}_speed_kbytes` | configured per-file limits (0 = none) |
-| `cloudsync_connection_schedule_enabled` | 1 if a schedule restricts syncing |
-| `cloudsync_session_info{local_path,remote_path,sync_direction,encrypted,priority}` | 1 per task |
-| `cloudsync_session_status`, `_error` | raw integers from `session_table` |
-| `cloudsync_session_created_timestamp_seconds`, `_remote_file_count` | |
-| `cloudsync_sessions_removed` | tasks still in the DB but marked removed (they are skipped) |
+| Metric                                                                             | Description                                                 |
+| ---------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `cloudsync_connection_info{client_type,local_user,remote_user,remote_root}`        | 1 per connection                                            |
+| `cloudsync_connection_status`, `_error`, `_last_sync_status`                       | raw integers from `connection_table`                        |
+| `cloudsync_connection_pull_event_period_seconds`                                   | how often remote changes are polled                         |
+| `cloudsync_connection_max_{upload,download}_speed_kbytes`                          | configured per-file limits (0 = none)                       |
+| `cloudsync_connection_schedule_enabled`                                            | 1 if a schedule restricts syncing                           |
+| `cloudsync_session_info{local_path,remote_path,sync_direction,encrypted,priority}` | 1 per task                                                  |
+| `cloudsync_session_status`, `_error`                                               | raw integers from `session_table`                           |
+| `cloudsync_session_created_timestamp_seconds`, `_remote_file_count`                |                                                             |
+| `cloudsync_sessions_removed`                                                       | tasks still in the DB but marked removed (they are skipped) |
 
 Observed on Cloud Sync 2.7.2: `client_type` 1 = Google Drive, 11 = WebDAV;
 `sync_direction` 2 = "Upload local changes only"; `status` 1 = active,
@@ -78,26 +78,26 @@ Observed on Cloud Sync 2.7.2: `client_type` 1 = Google Drive, 11 = WebDAV;
 
 ### Local index (`session/<id>/event-db.sqlite`)
 
-| Metric | Description |
-|---|---|
-| `cloudsync_session_files`, `_directories` | entries in the index |
-| `cloudsync_session_deleted_entries` | entries whose local file is gone |
-| `cloudsync_session_local_bytes`, `_remote_bytes` | remote is larger with client-side encryption |
+| Metric                                                                  | Description                                                                                                                                                                                 |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cloudsync_session_files`, `_directories`                               | entries in the index                                                                                                                                                                        |
+| `cloudsync_session_deleted_entries`                                     | entries whose local file is gone                                                                                                                                                            |
+| `cloudsync_session_local_bytes`, `_remote_bytes`                        | remote is larger with client-side encryption                                                                                                                                                |
 | `cloudsync_session_files_without_remote_id`, `_bytes_without_remote_id` | files with no cloud file id — **for ID-based clouds (Google Drive, OneDrive, Dropbox, Box) this is the not-yet-uploaded backlog**; for WebDAV/S3 the field is always empty, ignore it there |
-| `cloudsync_session_pending_scans` | directory scans queued |
-| `cloudsync_session_recycle_bin_entries` | |
-| `cloudsync_session_last_index_change_timestamp_seconds` | last time the daemon touched the index |
-| `cloudsync_session_index_readable`, `cloudsync_session_event_db_bytes` | |
+| `cloudsync_session_pending_scans`                                       | directory scans queued                                                                                                                                                                      |
+| `cloudsync_session_recycle_bin_entries`                                 |                                                                                                                                                                                             |
+| `cloudsync_session_last_index_change_timestamp_seconds`                 | last time the daemon touched the index                                                                                                                                                      |
+| `cloudsync_session_index_readable`, `cloudsync_session_event_db_bytes`  |                                                                                                                                                                                             |
 
 ### Cloud side (`connection/<id>/server-db.sqlite`)
 
-| Metric | Description |
-|---|---|
-| `cloudsync_connection_remote_files`, `_remote_directories`, `_remote_bytes` | what the daemon knows about the cloud folder |
+| Metric                                                                            | Description                                                                          |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `cloudsync_connection_remote_files`, `_remote_directories`, `_remote_bytes`       | what the daemon knows about the cloud folder                                         |
 | `cloudsync_remote_pending_events{sess_id,mode}`, `cloudsync_remote_pending_bytes` | remote change events fetched but not yet reconciled (`mode` 2 = file, 3 = directory) |
-| `cloudsync_unfinished_events{sess_id}`, `cloudsync_unfinished_bytes` | transfers started but not finished |
-| `cloudsync_remote_pending_raw_events` | raw change notifications not yet expanded |
-| `cloudsync_resumable_transfers{sess_id}`, `cloudsync_resumable_transfer_retries` | from `db/resume-info-db.sqlite` |
+| `cloudsync_unfinished_events{sess_id}`, `cloudsync_unfinished_bytes`              | transfers started but not finished                                                   |
+| `cloudsync_remote_pending_raw_events`                                             | raw change notifications not yet expanded                                            |
+| `cloudsync_resumable_transfers{sess_id}`, `cloudsync_resumable_transfer_retries`  | from `db/resume-info-db.sqlite`                                                      |
 
 ### History (`db/history.sqlite`)
 
@@ -106,27 +106,27 @@ highest row id it has seen and counts new rows, so the counters are exact as
 long as fewer than 500 events per connection arrive between two refreshes
 (`cloudsync_history_dropped_rows_total` tells you if that happened).
 
-| Metric | Description |
-|---|---|
-| `cloudsync_history_events_total{action}` | counter since exporter start; `action` = upload, download, remove_remote, remove_local, rename_*, merge, ... |
-| `cloudsync_history_errors_total{action,error,code}` | events with a non-zero error code (`error` decoded: request_throttled, quota, auth_token_expired, ...) |
-| `cloudsync_history_last_event_timestamp_seconds{action}` | last event of that kind still in the table (gauge, available immediately) |
-| `cloudsync_history_recent_events{action}` | rows of that kind still in the table |
-| `cloudsync_history_rows`, `cloudsync_history_dropped_rows_total` | |
+| Metric                                                           | Description                                                                                                  |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `cloudsync_history_events_total{action}`                         | counter since exporter start; `action` = upload, download, remove_remote, remove_local, rename_*, merge, ... |
+| `cloudsync_history_errors_total{action,error,code}`              | events with a non-zero error code (`error` decoded: request_throttled, quota, auth_token_expired, ...)       |
+| `cloudsync_history_last_event_timestamp_seconds{action}`         | last event of that kind still in the table (gauge, available immediately)                                    |
+| `cloudsync_history_recent_events{action}`                        | rows of that kind still in the table                                                                         |
+| `cloudsync_history_rows`, `cloudsync_history_dropped_rows_total` |                                                                                                              |
 
 ### Daemon log (optional, `CLOUDSYNC_LOG_DIR`)
 
-| Metric | Description |
-|---|---|
-| `cloudsync_connection_throttled{conn_id}` | 1 while the daemon logs `connection N is under throttling` (window `THROTTLE_WINDOW`) |
-| `cloudsync_connection_throttle_remaining_seconds{conn_id}` | back-off still to wait (last logged value) |
-| `cloudsync_throttle_waits_total{conn_id}`, `cloudsync_throttle_wait_seconds_total` | back-offs imposed and their total length |
-| `cloudsync_api_errors_total{reason}` | `userRateLimitExceeded`, `rateLimitExceeded`, `authError`, ... |
-| `cloudsync_worker_results_total{result}` | `Successful`, `Request throttled`, `Auth token expired`, ... |
-| `cloudsync_uploads_started_total{sess_id}`, `cloudsync_upload_failures_total{sess_id,code,error}` | |
-| `cloudsync_events_total{stage,type,sess_id}` | `stage` pushed (detected locally) → processing → done; `type` EV_ADD, EV_MODIFY, ... |
-| `cloudsync_resume_session_responses_total{code}` | HTTP codes when resuming interrupted uploads |
-| `cloudsync_log_available`, `_lines_total{level}`, `_last_timestamp_seconds`, `_file_bytes`, `_rotations_total`, `_continuation_lines_total` | tailer health; `last_timestamp` doubles as daemon liveness |
+| Metric                                                                                                                                      | Description                                                                           |
+| ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `cloudsync_connection_throttled{conn_id}`                                                                                                   | 1 while the daemon logs `connection N is under throttling` (window `THROTTLE_WINDOW`) |
+| `cloudsync_connection_throttle_remaining_seconds{conn_id}`                                                                                  | back-off still to wait (last logged value)                                            |
+| `cloudsync_throttle_waits_total{conn_id}`, `cloudsync_throttle_wait_seconds_total`                                                          | back-offs imposed and their total length                                              |
+| `cloudsync_api_errors_total{reason}`                                                                                                        | `userRateLimitExceeded`, `rateLimitExceeded`, `authError`, ...                        |
+| `cloudsync_worker_results_total{result}`                                                                                                    | `Successful`, `Request throttled`, `Auth token expired`, ...                          |
+| `cloudsync_uploads_started_total{sess_id}`, `cloudsync_upload_failures_total{sess_id,code,error}`                                           |                                                                                       |
+| `cloudsync_events_total{stage,type,sess_id}`                                                                                                | `stage` pushed (detected locally) → processing → done; `type` EV_ADD, EV_MODIFY, ...  |
+| `cloudsync_resume_session_responses_total{code}`                                                                                            | HTTP codes when resuming interrupted uploads                                          |
+| `cloudsync_log_available`, `_lines_total{level}`, `_last_timestamp_seconds`, `_file_bytes`, `_rotations_total`, `_continuation_lines_total` | tailer health; `last_timestamp` doubles as daemon liveness                            |
 
 Per-worker lines carry no connection id, so the exporter maps workers to
 connections/tasks from the throttling and `current event` lines (the last
@@ -139,17 +139,17 @@ Requires a DSM account allowed to use Cloud Sync (the API accepts non-admin
 users, but they only see their own connections). The exporter logs in with
 `SYNO.API.Auth` and polls `SYNO.CloudSync` `list_conn` + `list_sess`.
 
-| Metric | Description |
-|---|---|
-| `cloudsync_dsm_connection_state{state}` | state set: `uptodate`, `syncing`, `processing`, `scanning`, `connecting`, `pause`, `suspended`, `error`, `unlink` — exactly one is 1 |
-| `cloudsync_dsm_connection_unfinished_files` | the UI's *"Processing N file(s)..."* |
-| `cloudsync_dsm_connection_info{type,display_name,user}` | `type` = `gd`, `wd`, ... |
-| `cloudsync_dsm_connection_link_status`, `_cloud_status`, `_exceeds_maximum_files` | raw `list_conn` fields |
-| `cloudsync_dsm_session_state{local_path,state}` | per task, same state set (`sync_status`) |
-| `cloudsync_dsm_session_info{remote_path,direction,cloud_type}` | `direction` = `ONLY_UPLOAD`, ... |
-| `cloudsync_dsm_session_error_code`, `_link_status` | |
-| `cloudsync_dsm_paused`, `cloudsync_dsm_tray_info{state}` | global pause flag and tray status |
-| `cloudsync_dsm_up`, `_requests_total`, `_poll_failures_total`, `_last_success_timestamp_seconds` | |
+| Metric                                                                                           | Description                                                                                                                          |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `cloudsync_dsm_connection_state{state}`                                                          | state set: `uptodate`, `syncing`, `processing`, `scanning`, `connecting`, `pause`, `suspended`, `error`, `unlink` — exactly one is 1 |
+| `cloudsync_dsm_connection_unfinished_files`                                                      | the UI's _"Processing N file(s)..."_                                                                                                 |
+| `cloudsync_dsm_connection_info{type,display_name,user}`                                          | `type` = `gd`, `wd`, ...                                                                                                             |
+| `cloudsync_dsm_connection_link_status`, `_cloud_status`, `_exceeds_maximum_files`                | raw `list_conn` fields                                                                                                               |
+| `cloudsync_dsm_session_state{local_path,state}`                                                  | per task, same state set (`sync_status`)                                                                                             |
+| `cloudsync_dsm_session_info{remote_path,direction,cloud_type}`                                   | `direction` = `ONLY_UPLOAD`, ...                                                                                                     |
+| `cloudsync_dsm_session_error_code`, `_link_status`                                               |                                                                                                                                      |
+| `cloudsync_dsm_paused`, `cloudsync_dsm_tray_info{state}`                                         | global pause flag and tray status                                                                                                    |
+| `cloudsync_dsm_up`, `_requests_total`, `_poll_failures_total`, `_last_success_timestamp_seconds` |                                                                                                                                      |
 
 Verified on DSM 7.2.2 / Cloud Sync 2.7.2 with a dedicated member of
 `administrators` (a non-admin sees only its own connections). The exporter
@@ -165,20 +165,20 @@ log the raw responses.
 
 ## Configuration (env)
 
-| Variable | Default | |
-|---|---|---|
-| `CLOUDSYNC_REPO` | `/cloudsync` | mount of the repository (`repo_path` in `daemon.conf`, e.g. `/volume2/@cloudsync`) |
-| `CLOUDSYNC_LOG_DIR` | *(off)* | mount of `/var/packages/CloudSync/var/log` |
-| `CLOUDSYNC_LOG_FILE` | `synocloudsync.log` | |
-| `LISTEN_PORT` | `9840` | |
-| `REFRESH_INTERVAL` | `30` | seconds between database re-reads |
-| `LOG_POLL_INTERVAL` | `5` | seconds between log polls |
-| `THROTTLE_WINDOW` | `60` | seconds after the last throttling line the connection still counts as throttled |
-| `DSM_URL` | *(off)* | e.g. `https://192.168.0.10:5001` |
-| `DSM_USER`, `DSM_PASS` / `DSM_PASS_FILE` | | |
-| `DSM_VERIFY_TLS` | `true` | set `false` for the self-signed DSM certificate |
-| `DSM_INTERVAL`, `DSM_TIMEOUT` | `30`, `15` | |
-| `DEBUG` | | log raw DSM responses and fallbacks |
+| Variable                                 | Default             |                                                                                    |
+| ---------------------------------------- | ------------------- | ---------------------------------------------------------------------------------- |
+| `CLOUDSYNC_REPO`                         | `/cloudsync`        | mount of the repository (`repo_path` in `daemon.conf`, e.g. `/volume2/@cloudsync`) |
+| `CLOUDSYNC_LOG_DIR`                      | _(off)_             | mount of `/var/packages/CloudSync/var/log`                                         |
+| `CLOUDSYNC_LOG_FILE`                     | `synocloudsync.log` |                                                                                    |
+| `LISTEN_PORT`                            | `9840`              |                                                                                    |
+| `REFRESH_INTERVAL`                       | `30`                | seconds between database re-reads                                                  |
+| `LOG_POLL_INTERVAL`                      | `5`                 | seconds between log polls                                                          |
+| `THROTTLE_WINDOW`                        | `60`                | seconds after the last throttling line the connection still counts as throttled    |
+| `DSM_URL`                                | _(off)_             | e.g. `https://192.168.0.10:5001`                                                   |
+| `DSM_USER`, `DSM_PASS` / `DSM_PASS_FILE` |                     |                                                                                    |
+| `DSM_VERIFY_TLS`                         | `true`              | set `false` for the self-signed DSM certificate                                    |
+| `DSM_INTERVAL`, `DSM_TIMEOUT`            | `30`, `15`          |                                                                                    |
+| `DEBUG`                                  |                     | log raw DSM responses and fallbacks                                                |
 
 ## Running
 
@@ -220,7 +220,7 @@ cloudsync_connection_throttled == 1
 ## Limitations
 
 - The daemon's in-memory queue is not persisted anywhere readable; the exact
-  *"N files to process"* figure exists only in the DSM Web API (`DSM_URL`).
+  _"N files to process"_ figure exists only in the DSM Web API (`DSM_URL`).
   The database-derived queue gauges (`files_without_remote_id`,
   `remote_pending_events`, `unfinished_events`, `resumable_transfers`) are the
   closest persisted equivalents.
@@ -229,3 +229,7 @@ cloudsync_connection_throttled == 1
 - Semantics of some raw integers (`status`, `last_sync_status`,
   `sync_direction`, `client_type`) are documented only as observed on
   Cloud Sync 2.7.2; they are exposed raw rather than guessed.
+
+## Development standard
+
+This repository adopts version 0.4.0 of the shared development standard. Read the [English guide](docs/en/development-standard.md) or [Russian guide](docs/ru/development-standard.md). The local toolkit checks staged secrets, changed-file formatting and bilingual documentation before merge. Existing product CI remains in place. Adoption is in progress; product acceptance and legacy-document translation are recorded separately in .repo-policy.json.
